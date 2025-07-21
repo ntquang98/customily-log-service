@@ -9,21 +9,7 @@
     <p><b>Timestamp:</b> {{.Log.Timestamp}}</p>
   </div>
   <h3 class="font-semibold mb-1">Body</h3>
-  <pre
-    class="bg-gray-100 p-3 rounded overflow-x-auto"
-  ><code id="json-body" class="text-sm"></code></pre>
+  <pre class="bg-gray-100 p-3 rounded overflow-x-auto">
+    <code id="json-body" class="text-sm" data-raw='{{.Log.Body}}'></code>
+  </pre>
 </div>
-
-<script>
-  const raw = `{{.Log.Body}}`;
-  try {
-    const obj = JSON.parse(raw);
-    document.getElementById("json-body").textContent = JSON.stringify(
-      obj,
-      null,
-      2
-    );
-  } catch {
-    document.getElementById("json-body").textContent = raw;
-  }
-</script>

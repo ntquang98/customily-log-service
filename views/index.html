@@ -55,5 +55,20 @@
     </div>
 
     <div id="log-detail" class="mt-6 bg-white rounded shadow p-4"></div>
+    <script>
+      document.body.addEventListener("htmx:afterSwap", function (evt) {
+        if (evt.target.id === "log-detail") {
+          const pre = document.getElementById("json-body");
+          if (pre && pre.dataset.raw) {
+            try {
+              const obj = JSON.parse(pre.dataset.raw);
+              pre.textContent = JSON.stringify(obj, null, 2);
+            } catch {
+              pre.textContent = pre.dataset.raw;
+            }
+          }
+        }
+      });
+    </script>
   </body>
 </html>

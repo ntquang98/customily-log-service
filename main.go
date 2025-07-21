@@ -2,9 +2,7 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"log"
-	"os"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -20,11 +18,7 @@ import (
 var logCollection *mongo.Collection
 
 func main() {
-	// Get MongoDB URI from environment variable, fallback to localhost
-	mongoURI := os.Getenv("MONGODB_URI")
-	if mongoURI == "" {
-		mongoURI = "mongodb://localhost:27017"
-	}
+	mongoURI := ""
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -36,10 +30,6 @@ func main() {
 	logCollection = client.Database("shopify_logs").Collection("logs")
 
 	engine := html.New("./views", ".html")
-	engine.AddFunc("json", func(v interface{}) string {
-		b, _ := json.MarshalIndent(v, "", "  ")
-		return string(b)
-	})
 	app := fiber.New(fiber.Config{
 		Views: engine,
 	})
