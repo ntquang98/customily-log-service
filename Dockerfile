@@ -17,7 +17,7 @@ RUN go mod download
 COPY . .
 
 # Build the application
-RUN GOOS=linux go build -a -installsuffix cgo -o main .
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .
 
 # Final stage
 FROM alpine:latest
