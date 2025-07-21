@@ -4,9 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"log"
+	"os"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/template/html/v2"
 	"github.com/ntquang98/shopify-log-service/models"
 	"go.mongodb.org/mongo-driver/bson"
@@ -18,9 +20,15 @@ import (
 var logCollection *mongo.Collection
 
 func main() {
+	// Get MongoDB URI from environment variable, fallback to localhost
+	mongoURI := os.Getenv("MONGODB_URI")
+	if mongoURI == "" {
+		mongoURI = "mongodb://localhost:27017"
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://localhost:27017"))
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(mongoURI))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -35,6 +43,14 @@ func main() {
 	app := fiber.New(fiber.Config{
 		Views: engine,
 	})
+
+	// Add CORS middleware with full access
+	app.Use(cors.New(cors.Config{
+		AllowOrigins:     "*",
+		AllowMethods:     "GET,POST,HEAD,PUT,DELETE,PATCH,OPTIONS",
+		AllowHeaders:     "*",
+		AllowCredentials: false, // Set to true if you need credentials
+	}))
 
 	// API
 	app.Post("/log", createLog)
