@@ -1,0 +1,33 @@
+<table class="min-w-full table-auto border-collapse">
+  <thead>
+    <tr class="bg-gray-200">
+      <th class="px-4 py-2 text-left">Store</th>
+      <th class="px-4 py-2">Type</th>
+      <th class="px-4 py-2">Script Loaded</th>
+      <th class="px-4 py-2">Customily</th>
+      <th class="px-4 py-2">Timestamp</th>
+      <th class="px-4 py-2">Detail</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{range .Logs}}
+    <tr class="border-b hover:bg-gray-50">
+      <td class="px-4 py-2">{{.StoreDomain}}</td>
+      <td class="px-4 py-2">{{.Type}}</td>
+      <td class="px-4 py-2">{{.ScriptLoaded}}</td>
+      <td class="px-4 py-2">{{.CustomilyLoaded}}</td>
+      <td class="px-4 py-2">{{.Timestamp}}</td>
+      <td class="px-4 py-2">
+        <a
+          href="/logs/{{.ID.Hex}}"
+          hx-get="/logs/{{.ID.Hex}}"
+          hx-target="#log-detail"
+          hx-swap="innerHTML"
+          class="text-blue-600 hover:underline"
+          >View</a
+        >
+      </td>
+    </tr>
+    {{end}}
+  </tbody>
+</table>

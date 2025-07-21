@@ -1,0 +1,28 @@
+<div>
+  <h2 class="text-xl font-semibold mb-2">Log Detail</h2>
+  <div class="space-y-1 text-sm mb-4">
+    <p><b>Store:</b> {{.Log.StoreDomain}}</p>
+    <p><b>Type:</b> {{.Log.Type}}</p>
+    <p><b>Script Loaded:</b> {{.Log.ScriptLoaded}}</p>
+    <p><b>Customily Loaded:</b> {{.Log.CustomilyLoaded}}</p>
+    <p><b>Timestamp:</b> {{.Log.Timestamp}}</p>
+  </div>
+  <h3 class="font-semibold mb-1">Body</h3>
+  <pre
+    class="bg-gray-100 p-3 rounded overflow-x-auto"
+  ><code id="json-body" class="text-sm"></code></pre>
+</div>
+
+<script>
+  const raw = `{{.Log.Body}}`;
+  try {
+    const obj = JSON.parse(raw);
+    document.getElementById("json-body").textContent = JSON.stringify(
+      obj,
+      null,
+      2
+    );
+  } catch {
+    document.getElementById("json-body").textContent = raw;
+  }
+</script>
