@@ -30,8 +30,7 @@
         cartTokenStr.length > 1 ? cartTokenStr[1].replace("key=", "") : "";
       const cartItems = JSON.stringify(cartData?.items || []);
 
-      const LOG_ENDPOINT = "https://af14efe3673b.ngrok-free.app/log";
-      // const LOG_ENDPOINT = "https://2eefd678c2ef.ngrok-free.app/log";
+      const LOG_ENDPOINT = "https://log.aspirez.co/log";
 
       const payload = {
         ...data,
