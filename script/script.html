@@ -1,0 +1,94 @@
+<script>
+  (function () {
+    async function getCartData() {
+      try {
+        const res = await fetch("/cart.js");
+        const cart = await res.json();
+        return cart;
+      } catch (e) {
+        return {};
+      }
+    }
+
+    async function sendLog(data) {
+      const scriptSrc =
+        "https://cdn.customily.com/shopify/static/customily.shopify.script.js";
+      const customilySrc = "https://cdn.customily.com/customily.js";
+      const scriptLoaded = Array.from(document.scripts).some((s) =>
+        s.src.includes(scriptSrc)
+      );
+      const customilyLoaded = Array.from(document.scripts).some((s) =>
+        s.src.includes(customilySrc)
+      );
+      const storeDomain = Shopify.shop;
+      const appLoaded = window?.customilyAppLoaded || false;
+
+      const cartData = await getCartData();
+      const cartTokenStr = (cartData?.token || "").split("?");
+      const cartToken = cartTokenStr.length > 0 ? cartTokenStr[0] : "";
+      const cartTokenKey =
+        cartTokenStr.length > 1 ? cartTokenStr[1].replace("key=", "") : "";
+      const cartItems = JSON.stringify(cartData?.items || []);
+
+      const LOG_ENDPOINT = "https://af14efe3673b.ngrok-free.app/log";
+      // const LOG_ENDPOINT = "https://2eefd678c2ef.ngrok-free.app/log";
+
+      const payload = {
+        ...data,
+        cartToken,
+        cartTokenKey,
+        cartItems,
+        scriptLoaded,
+        customilyLoaded,
+        appLoaded,
+        storeDomain,
+      };
+
+      try {
+        const body = JSON.stringify(payload);
+
+        await fetch(LOG_ENDPOINT, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body,
+          keepalive: true,
+        });
+      } catch (error) {
+        console.error("sendLog failed: ", error);
+      }
+    }
+
+    // Intercept fetch requests to /cart/add.js
+    const originalFetch = window.fetch;
+    window.fetch = async function (...args) {
+      const [resource, config] = args;
+      const url = typeof resource === "string" ? resource : resource.url;
+
+      if (url.includes("/cart/add")) {
+        let bodyData = null;
+
+        if (config?.body instanceof FormData) {
+          bodyData = {};
+          for (const [key, value] of config.body.entries()) {
+            bodyData[key?.trim()] = value;
+          }
+        } else if (typeof config?.body === "string") {
+          try {
+            bodyData = JSON.parse(config.body);
+          } catch {
+            bodyData = config.body;
+          }
+        }
+
+        sendLog({
+          type: "intercept_cart_add_fetch",
+          method: config?.method || "GET",
+          url,
+          body: JSON.stringify(bodyData),
+        });
+      }
+
+      return originalFetch.apply(this, args);
+    };
+  })();
+</script>

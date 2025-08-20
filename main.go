@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"log"
+	"strconv"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -37,7 +38,7 @@ func main() {
 	// Add CORS middleware with full access
 	app.Use(cors.New(cors.Config{
 		AllowOrigins:     "*",
-		AllowMethods:     "GET,POST,HEAD,PUT,DELETE,PATCH,OPTIONS",
+		AllowMethods:     "*",
 		AllowHeaders:     "*",
 		AllowCredentials: false, // Set to true if you need credentials
 	}))
@@ -61,8 +62,12 @@ func createLog(c *fiber.Ctx) error {
 	}
 
 	logEntry.Timestamp = time.Now()
+	logEntry.IP = c.IP()
+	logEntry.UserAgent = c.Get("User-Agent")
 
-	_, err := logCollection.InsertOne(context.Background(), logEntry)
+	ctx, cancel := context.WithTimeout(c.Context(), 10*time.Second)
+	defer cancel()
+	_, err := logCollection.InsertOne(ctx, logEntry)
 	if err != nil {
 		return err
 	}
@@ -71,13 +76,25 @@ func createLog(c *fiber.Ctx) error {
 }
 
 func listLogs(c *fiber.Ctx) error {
+	// query params: ?limit=20&after=<id>&before=<id>
+	limit, _ := strconv.Atoi(c.Query("limit", "50"))
+	after := c.Query("after", "")
+	before := c.Query("before", "")
+
 	store := c.Query("store")
+	cartToken := c.Query("cart_token")
 	from := c.Query("from")
 	to := c.Query("to")
 
 	filter := bson.M{}
+	opts := options.Find().SetSort(bson.M{"_id": -1}).SetLimit(int64(limit))
+
 	if store != "" {
-		filter["storeDomain"] = store
+		filter["store_domain"] = store
+	}
+
+	if cartToken != "" {
+		filter["cart_token"] = cartToken
 	}
 
 	if from != "" || to != "" {
@@ -90,7 +107,7 @@ func listLogs(c *fiber.Ctx) error {
 
 		if to != "" {
 			if t, err := time.Parse("2006-01-02", to); err == nil {
-				timeFilter["$lte"] = t
+				timeFilter["$lte"] = t.AddDate(0, 0, 1)
 			}
 		}
 
@@ -99,27 +116,72 @@ func listLogs(c *fiber.Ctx) error {
 		}
 	}
 
-	opts := options.Find().SetSort(bson.M{"timestamp": -1}).SetLimit(50)
-	cur, err := logCollection.Find(context.Background(), bson.M{}, opts)
+	if after != "" {
+		oid, err := primitive.ObjectIDFromHex(after)
+		if err == nil {
+			// fetch documents with _id < after (newer → older)
+			filter["_id"] = bson.M{"$lt": oid}
+		}
+	}
+
+	if before != "" {
+		oid, err := primitive.ObjectIDFromHex(before)
+		if err == nil {
+			// fetch documents with _id > before (older → newer, then reverse later)
+			filter["_id"] = bson.M{"$gt": oid}
+			opts.SetSort(bson.D{{Key: "_id", Value: 1}}) // ascending
+		}
+	}
+
+	ctx, cancel := context.WithTimeout(c.Context(), 10*time.Second)
+	defer cancel()
+
+	// count total documents
+	total, err := logCollection.CountDocuments(ctx, filter)
+	if err != nil {
+		return err
+	}
+	cur, err := logCollection.Find(ctx, filter, opts)
 	if err != nil {
 		return err
 	}
 
 	var logs []models.Log
-	if err = cur.All(context.Background(), &logs); err != nil {
+	if err = cur.All(ctx, &logs); err != nil {
 		return err
 	}
 
-	if c.Get("HX-Request") == "true" {
-		return c.Render("table", fiber.Map{"Logs": logs})
+	// if before was used, reverse so client still gets newest first
+	if before != "" {
+		for i, j := 0, len(logs)-1; i < j; i, j = i+1, j-1 {
+			logs[i], logs[j] = logs[j], logs[i]
+		}
 	}
 
-	return c.Render("index", fiber.Map{
-		"Logs":  logs,
-		"Store": store,
-		"From":  from,
-		"To":    to,
-	})
+	// prepare pagination tokens
+	var nextID, prevID string
+	if len(logs) > 0 {
+		nextID = logs[len(logs)-1].ID.Hex() // last element
+		prevID = logs[0].ID.Hex()           // first element
+	}
+
+	data := fiber.Map{
+		"Logs":      logs,
+		"Store":     store,
+		"CartToken": cartToken,
+		"From":      from,
+		"To":        to,
+		"Limit":     limit,
+		"Total":     total,
+		"NextID":    nextID,
+		"PrevID":    prevID,
+	}
+
+	if c.Get("HX-Request") == "true" {
+		return c.Render("table", data)
+	}
+
+	return c.Render("index", data)
 }
 
 func logDetail(c *fiber.Ctx) error {

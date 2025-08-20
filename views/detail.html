@@ -7,9 +7,17 @@
     <p><b>Customily Loaded:</b> {{.Log.CustomilyLoaded}}</p>
     <p><b>App Loaded:</b> {{.Log.AppLoaded}}</p>
     <p><b>Timestamp:</b> {{.Log.Timestamp}}</p>
+    <p><b>Cart Token</b> {{.Log.CartToken }}</p>
+    <p><b>Cart Token Key</b> {{.Log.CartTokenKey }}</p>
+    <p><b>IP</b> {{.Log.IP }}</p>
+    <p><b>User Agent</b> {{.Log.UserAgent }}</p>
   </div>
   <h3 class="font-semibold mb-1">Body</h3>
   <pre class="bg-gray-100 p-3 rounded overflow-x-auto">
     <code id="json-body" class="text-sm" data-raw='{{.Log.Body}}'></code>
+  </pre>
+  <h3 class="font-semibold mb-1">Current Cart Items</h3>
+  <pre class="bg-gray-100 p-3 rounded overflow-x-auto">
+    <code id="json-body-2" class="text-sm" data-raw='{{.Log.CartItems}}'></code>
   </pre>
 </div>

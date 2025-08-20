@@ -33,3 +33,27 @@
     {{end}}
   </tbody>
 </table>
+
+<div class="flex justify-between mt-2">
+  {{if .PrevID}}
+  <button
+    class="px-3 py-1 bg-gray-300 rounded"
+    hx-get="/?before={{.PrevID}}&store={{.Store}}&from={{.From}}&to={{.To}}&limit={{.Limit}}"
+    hx-target="#log-list"
+    hx-swap="innerHTML"
+    hx-push-url="true"
+  >
+    Prev
+  </button>
+  {{end}} {{if .NextID}}
+  <button
+    class="px-3 py-1 bg-gray-300 rounded"
+    hx-get="/?after={{.NextID}}&store={{.Store}}&from={{.From}}&to={{.To}}&limit={{.Limit}}"
+    hx-target="#log-list"
+    hx-swap="innerHTML"
+    hx-push-url="true"
+  >
+    Next
+  </button>
+  {{end}}
+</div>

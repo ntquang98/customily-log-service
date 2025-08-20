@@ -10,10 +10,12 @@
     <h1 class="text-2xl font-bold mb-4">Shopify Logs</h1>
 
     <form
+      id="filter-form"
       class="flex flex-wrap gap-4 mb-6 bg-white p-4 rounded shadow"
       hx-get="/"
       hx-target="#log-list"
       hx-swap="innerHTML"
+      hx-push-url="true"
     >
       <label class="flex flex-col text-sm">
         Store Domain:
@@ -21,6 +23,15 @@
           type="text"
           name="store"
           value="{{.Store}}"
+          class="border rounded p-1"
+        />
+      </label>
+      <label class="flex flex-col text-sm">
+        Cart Token:
+        <input
+          type="text"
+          name="cart_token"
+          value="{{.CartToken}}"
           class="border rounded p-1"
         />
       </label>
@@ -65,6 +76,16 @@
               pre.textContent = JSON.stringify(obj, null, 2);
             } catch {
               pre.textContent = pre.dataset.raw;
+            }
+          }
+
+          const pre2 = document.getElementById("json-body-2");
+          if (pre2 && pre2.dataset.raw) {
+            try {
+              const obj = JSON.parse(pre2.dataset.raw);
+              pre2.textContent = JSON.stringify(obj, null, 2);
+            } catch {
+              pre2.textContent = pre.dataset.raw;
             }
           }
         }

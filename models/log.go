@@ -17,4 +17,9 @@ type Log struct {
 	AppLoaded       bool               `json:"appLoaded,omitempty" bson:"app_loaded,omitempty"`
 	Body            string             `json:"body,omitempty" bson:"body,omitempty"`
 	Timestamp       time.Time          `json:"timestamp,omitempty" bson:"timestamp,omitempty"`
+	CartToken       string             `json:"cartToken,omitempty" bson:"cart_token,omitempty"`
+	CartTokenKey    string             `json:"cartTokenKey,omitempty" bson:"cart_token_key,omitempty"`
+	CartItems       string             `json:"cartItems,omitempty" bson:"cart_items,omitempty"`
+	IP              string             `json:"ip,omitempty" bson:"ip,omitempty"`
+	UserAgent       string             `json:"userAgent,omitempty" bson:"user_agent,omitempty"`
 }
